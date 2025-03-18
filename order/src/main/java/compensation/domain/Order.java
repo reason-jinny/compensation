@@ -23,92 +23,49 @@ public class Order  {
     
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
-    
-    
-    
-    
+ 
     private Long id;
-    
-    
-    
-    
+
     private String productId;
-    
-    
-    
     
     private Integer qty;
     
-    
-    
-    
     private String customerId;
-    
-    
-    
     
     private Double amount;
     
-    
-    
-    
     private String status;
-    
-    
-    
-    
+
     private String address;
 
     @PostPersist
     public void onPostPersist(){
-    Inventory inventory = OrderApplication.applicationContext
-        .getBean(compensation.external.InventoryService.class)
-        .checkStock(get??);
-
-
         OrderPlaced orderPlaced = new OrderPlaced(this);
         orderPlaced.publishAfterCommit();
-
-
-
-        OrderCancelled orderCancelled = new OrderCancelled(this);
-        orderCancelled.publishAfterCommit();
-
-    
     }
 
+    @PreRemove
+    public void onPreRemove() {
+        OrderCancelled orderCancelled = new OrderCancelled(this);
+        orderCancelled.publishAfterCommit();
+    }
+    
     public static OrderRepository repository(){
         OrderRepository orderRepository = OrderApplication.applicationContext.getBean(OrderRepository.class);
         return orderRepository;
     }
 
-
-
-
-//<<< Clean Arch / Port Method
-    public static void updateStatus(OutOfStock outOfStock){
-        
+    // 재고 부족으로 인해 주문 상태 업데이트
+    public static void updateStatus(OutOfStock outOfStock){ // OutOfStock이 들어왔을 때, 업데이트 해라
         //implement business logic here:
-        
-        /** Example 1:  new item 
-        Order order = new Order();
-        repository().save(order);
-
-        */
-
-        /** Example 2:  finding and process
-        
-
-        repository().findById(outOfStock.get???()).ifPresent(order->{
+        // Example 2:  finding and process
+        repository().findById( // 내 저장소에서 Id를 찾아.
+            outOfStock.getOrderId() // OutOfStock 중에 orderId가 있네.
+            ).ifPresent(order->{
             
-            order // do something
-            repository().save(order);
-
-
-         });
-        */
-
-        
+                order.setStatus("OrderCancelled"); // do something - status를 바꿔야겠다!!
+                repository().save(order);
+         });  
     }
 //>>> Clean Arch / Port Method
 
